@@ -97,7 +97,13 @@ if arquivo:
         st.error("Arquivo não encontrado.")
         transacoes = None
     except FormatoDesconhecidoError:
+        # Mostra o cabeçalho real para diagnóstico
+        import csv as _csv
+        with open(tmp_path, "r", encoding="utf-8-sig") as _f:
+            cabecalho_real = next(_csv.reader(_f), [])
         st.error("❌ Formato não suportado. Use o CSV exportado da **Binance Brasil** ou **Mercado Bitcoin**.")
+        st.warning(f"**Colunas encontradas no arquivo:** `{', '.join(cabecalho_real)}`")
+        st.info("📸 Tire um print desta mensagem e compartilhe — vamos adicionar suporte a este formato.")
         transacoes = None
     finally:
         os.unlink(tmp_path)
