@@ -1,0 +1,27 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# Cache PTAX — gerado localmente, não commitar
+data/ptax_cache.json
+
+# Arquivos de relatório gerados pelo CLI
+relatorio_*.txt
+darf_*.txt
+irpf_*.txt
+
+# Dados sensíveis — nunca commitar CSVs reais
+# (os samples de exemplo são permitidos)
+data/uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
