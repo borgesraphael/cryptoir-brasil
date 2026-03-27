@@ -362,8 +362,8 @@ def _gerar_renda_variavel(
 # Formatação do relatório
 # ─────────────────────────────────────────────
 
-SEPARADOR = "═" * 56
-LINHA = "─" * 56
+SEPARADOR = "=" * 56
+LINHA = "-" * 56
 
 
 def _brl(valor: float) -> str:
@@ -375,49 +375,49 @@ def formatar_relatorio_irpf(relatorio: RelatorioIRPF) -> str:
     ano_declaracao = relatorio.ano + 1
 
     linhas.append(SEPARADOR)
-    linhas.append(f"  CryptoIR Brasil — IRPF {ano_declaracao} (ano-base {relatorio.ano})")
+    linhas.append(f"  CryptoIR Brasil - IRPF {ano_declaracao} (ano-base {relatorio.ano})")
     linhas.append(SEPARADOR)
     linhas.append("")
-    linhas.append("  ⚠ ATENÇÃO: Os valores abaixo são CUSTOS DE AQUISIÇÃO.")
+    linhas.append("  (!) ATENCAO: Os valores abaixo sao CUSTOS DE AQUISICAO.")
     linhas.append("  Nunca informe o valor de mercado atual dos ativos.")
     linhas.append("")
 
-    # ── Bens e Direitos ──
-    linhas.append("FICHA BENS E DIREITOS — GRUPO 08 (Criptoativos)")
+    # -- Bens e Direitos --
+    linhas.append("FICHA BENS E DIREITOS - GRUPO 08 (Criptoativos)")
     linhas.append(LINHA)
 
     if not relatorio.bens_e_direitos:
         linhas.append("  Nenhum ativo identificado.")
     else:
         for item in relatorio.bens_e_direitos:
-            linhas.append(f"  Código {item.codigo_bem} — {_nome_bem(item.asset)} ({item.asset})")
-            linhas.append(f"  Discriminação: \"{item.discriminacao}\"")
-            linhas.append(f"  Situação 31/12/{relatorio.ano - 1}:  {_brl(item.situacao_ano_anterior)}")
-            linhas.append(f"  Situação 31/12/{relatorio.ano}:  {_brl(item.situacao_ano_atual)}")
+            linhas.append(f"  Codigo {item.codigo_bem} - {_nome_bem(item.asset)} ({item.asset})")
+            linhas.append(f"  Discriminacao: \"{item.discriminacao}\"")
+            linhas.append(f"  Situacao 31/12/{relatorio.ano - 1}:  {_brl(item.situacao_ano_anterior)}")
+            linhas.append(f"  Situacao 31/12/{relatorio.ano}:  {_brl(item.situacao_ano_atual)}")
             linhas.append("")
 
-    # ── Rendimentos ──
+    # -- Rendimentos --
     if relatorio.rendimentos:
-        linhas.append("RENDIMENTOS TRIBUTÁVEIS — CÓDIGO 26")
+        linhas.append("RENDIMENTOS TRIBUTAVEIS - CODIGO 26")
         linhas.append(LINHA)
-        linhas.append("  Informe na ficha: Rendimentos Tributáveis Recebidos de PJ")
-        linhas.append("  Código: 26 — Outros")
+        linhas.append("  Informe na ficha: Rendimentos Tributaveis Recebidos de PJ")
+        linhas.append("  Codigo: 26 - Outros")
         linhas.append("")
         for r in relatorio.rendimentos:
             linhas.append(
                 f"  {r.tipo:<10} {r.asset:<6}  "
-                f"{r.quantidade_total:.6f} unid.  →  {_brl(r.valor_brl)}"
+                f"{r.quantidade_total:.6f} unid.  =>  {_brl(r.valor_brl)}"
                 f"  ({r.exchange})"
             )
         linhas.append(LINHA)
         linhas.append(f"  Total rendimentos:  {_brl(relatorio.total_rendimentos_brl)}")
         linhas.append("")
 
-    # ── Renda Variável ──
+    # -- Renda Variavel --
     if relatorio.renda_variavel:
-        linhas.append("RENDA VARIÁVEL — GANHOS EM CRIPTOATIVOS (exchanges nacionais)")
+        linhas.append("RENDA VARIAVEL - GANHOS EM CRIPTOATIVOS")
         linhas.append(LINHA)
-        linhas.append("  Informe na ficha: Renda Variável → Operações em Bolsa")
+        linhas.append("  Informe na ficha: Renda Variavel -> Operacoes em Bolsa")
         linhas.append("")
 
         for rv in relatorio.renda_variavel:
@@ -442,22 +442,22 @@ def formatar_relatorio_irpf(relatorio: RelatorioIRPF) -> str:
 
         linhas.append(LINHA)
         if relatorio.total_ganhos_rv > 0:
-            linhas.append(f"  Total ganhos tributáveis:  {_brl(relatorio.total_ganhos_rv)}")
+            linhas.append(f"  Total ganhos tributaveis:  {_brl(relatorio.total_ganhos_rv)}")
             linhas.append(f"  Total DARF recolhido:      {_brl(relatorio.total_imposto_darf)}")
         else:
-            linhas.append("  Nenhum ganho tributável no ano.")
+            linhas.append("  Nenhum ganho tributavel no ano.")
         linhas.append("")
 
-    # ── Observações ──
+    # -- Observacoes --
     if relatorio.observacoes:
-        linhas.append("ATENÇÃO")
+        linhas.append("ATENCAO")
         linhas.append(LINHA)
         for obs in relatorio.observacoes:
-            linhas.append(f"  ℹ {obs}")
+            linhas.append(f"  (i) {obs}")
         linhas.append("")
 
     linhas.append(LINHA)
-    linhas.append("⚠ Estimativa baseada nas normas da Receita Federal.")
+    linhas.append("(!) Estimativa baseada nas normas da Receita Federal.")
     linhas.append("  Verifique no PGD IRPF oficial antes de enviar.")
     linhas.append(SEPARADOR)
 

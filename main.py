@@ -23,13 +23,13 @@ from src.irpf_generator import gerar_irpf, formatar_relatorio_irpf
 
 
 AVISO_LEGAL = (
-    "⚠ Estimativa baseada nas normas da Receita Federal (IN RFB 2.291/2025 e legislação correlata).\n"
-    "  Este cálculo não substitui orientação de contador ou advogado tributarista.\n"
-    "  Verifique sempre no PGD IRPF oficial antes de enviar sua declaração."
+    "(!) Estimativa baseada nas normas da Receita Federal (IN RFB 2.291/2025).\n"
+    "  Este calculo nao substitui orientacao de contador ou advogado tributarista.\n"
+    "  Verifique sempre no PGD IRPF oficial antes de enviar sua declaracao."
 )
 
-SEPARADOR = "═" * 56
-LINHA = "─" * 56
+SEPARADOR = "=" * 56
+LINHA = "-" * 56
 
 
 # ─────────────────────────────────────────────
@@ -49,51 +49,51 @@ def formatar_relatorio(resultado: ResultadoDARF, arquivo_csv: str) -> str:
     linhas = []
 
     linhas.append(SEPARADOR)
-    linhas.append(f"  CryptoIR Brasil — DARF {resultado.periodo}")
+    linhas.append(f"  CryptoIR Brasil - DARF {resultado.periodo}")
     linhas.append(SEPARADOR)
     linhas.append(f"  Exchange:  {resultado.exchange_type.capitalize()}")
     linhas.append(f"  Arquivo:   {Path(arquivo_csv).name}")
     linhas.append("")
 
-    # ── Vendas do mês ──
+    # -- Vendas do mes --
     if resultado.detalhes_vendas:
-        linhas.append("VENDAS DO MÊS")
+        linhas.append("VENDAS DO MES")
         linhas.append(LINHA)
         for venda in resultado.detalhes_vendas:
             flag = ""
             if venda.e_trade_crypto:
-                flag = " [trade crypto→crypto]"
+                flag = " [trade crypto->crypto]"
             elif venda.e_conversao_stablecoin:
-                flag = " [conversão stablecoin]"
+                flag = " [conversao stablecoin]"
             linhas.append(
                 f"  {venda.data.strftime('%d/%m')}  "
-                f"{venda.quantidade:.6f} {venda.asset:<6}  →  "
+                f"{venda.quantidade:.6f} {venda.asset:<6}  =>  "
                 f"{_brl(venda.receita_brl)}{flag}"
             )
         linhas.append(LINHA)
         linhas.append(f"  Total vendido:       {_brl(resultado.total_vendas)}")
-        linhas.append(f"  Limite de isenção:   {_brl(resultado.limite_isencao)}")
+        linhas.append(f"  Limite de isencao:   {_brl(resultado.limite_isencao)}")
         linhas.append("")
 
         if resultado.e_isento:
             margem = resultado.limite_isencao - resultado.total_vendas
-            linhas.append(f"✓ ISENTO — vendas abaixo de {_brl(resultado.limite_isencao)}")
-            linhas.append(f"  Você ainda poderia vender mais {_brl(margem)} sem pagar imposto.")
+            linhas.append(f"[ok] ISENTO - vendas abaixo de {_brl(resultado.limite_isencao)}")
+            linhas.append(f"  Voce ainda poderia vender mais {_brl(margem)} sem pagar imposto.")
             linhas.append("")
-            linhas.append("  Lembre-se: mesmo isento, estas transações devem ser")
+            linhas.append("  Lembre-se: mesmo isento, estas transacoes devem ser")
             linhas.append("  declaradas no IRPF anual (ficha Bens e Direitos).")
         else:
             excesso = resultado.total_vendas - resultado.limite_isencao
-            linhas.append(f"⚠ Limite ultrapassado em {_brl(excesso)}")
+            linhas.append(f"(!) Limite ultrapassado em {_brl(excesso)}")
     else:
-        linhas.append("  Nenhuma venda registrada neste mês.")
+        linhas.append("  Nenhuma venda registrada neste mes.")
         linhas.append("")
-        linhas.append(f"✓ ISENTO — nenhuma venda no período.")
+        linhas.append(f"[ok] ISENTO - nenhuma venda no periodo.")
 
-    # ── Cálculo do ganho (só se tributável) ──
+    # -- Calculo do ganho (so se tributavel) --
     if not resultado.e_isento and resultado.detalhes_vendas:
         linhas.append("")
-        linhas.append("CÁLCULO DO GANHO DE CAPITAL (FIFO)")
+        linhas.append("CALCULO DO GANHO DE CAPITAL (FIFO)")
         linhas.append(LINHA)
         for venda in resultado.detalhes_vendas:
             linhas.append(
@@ -103,48 +103,48 @@ def formatar_relatorio(resultado: ResultadoDARF, arquivo_csv: str) -> str:
             )
         linhas.append(LINHA)
         linhas.append(f"  Receita total:        {_brl(resultado.total_vendas)}")
-        linhas.append(f"  Custo de aquisição:   {_brl(sum(v.custo_brl for v in resultado.detalhes_vendas))}")
+        linhas.append(f"  Custo de aquisicao:   {_brl(sum(v.custo_brl for v in resultado.detalhes_vendas))}")
         linhas.append(f"  Ganho bruto:          {_brl(resultado.ganho_bruto)}")
         if resultado.prejuizo_compensado > 0:
-            linhas.append(f"  Prejuízo compensado:  {_brl(-resultado.prejuizo_compensado)}")
-        linhas.append(f"  Ganho líquido:        {_brl(resultado.ganho_liquido)}")
+            linhas.append(f"  Prejuizo compensado:  {_brl(-resultado.prejuizo_compensado)}")
+        linhas.append(f"  Ganho liquido:        {_brl(resultado.ganho_liquido)}")
 
-        # ── Resultado ──
+        # -- Resultado --
         linhas.append("")
         linhas.append("RESULTADO")
         linhas.append(LINHA)
         if resultado.ganho_liquido <= 0:
-            linhas.append(f"  Prejuízo apurado.  Nenhum imposto devido.")
-            linhas.append(f"  Prejuízo de {_brl(abs(resultado.ganho_liquido))} registrado para compensação futura.")
+            linhas.append(f"  Prejuizo apurado.  Nenhum imposto devido.")
+            linhas.append(f"  Prejuizo de {_brl(abs(resultado.ganho_liquido))} registrado para compensacao futura.")
         else:
-            linhas.append(f"  Alíquota:  {_pct(resultado.aliquota)}")
-            linhas.append(f"  ► IMPOSTO DEVIDO: {_brl(resultado.imposto_devido)}")
+            linhas.append(f"  Aliquota:  {_pct(resultado.aliquota)}")
+            linhas.append(f"  >>> IMPOSTO DEVIDO: {_brl(resultado.imposto_devido)}")
             linhas.append("")
             linhas.append("DARF A PAGAR")
             linhas.append(LINHA)
-            linhas.append(f"  Código:              {resultado.codigo_darf}")
-            linhas.append(f"  Período apuração:    {resultado.periodo}")
+            linhas.append(f"  Codigo:              {resultado.codigo_darf}")
+            linhas.append(f"  Periodo apuracao:    {resultado.periodo}")
             linhas.append(f"  Vencimento:          {resultado.vencimento.strftime('%d/%m/%Y')}")
             linhas.append(f"  Valor:               {_brl(resultado.imposto_devido)}")
 
-    # ── Rendimentos (staking/airdrop) ──
+    # -- Rendimentos (staking/airdrop) --
     if resultado.rendimentos:
         linhas.append("")
-        linhas.append("RENDIMENTOS TRIBUTÁVEIS (declarar no IRPF anual)")
+        linhas.append("RENDIMENTOS TRIBUTAVEIS (declarar no IRPF anual)")
         linhas.append(LINHA)
         for r in resultado.rendimentos:
             linhas.append(
                 f"  {r.data.strftime('%d/%m')}  {r.tipo:<10}  "
-                f"{r.quantidade:.6f} {r.asset:<6}  →  {_brl(r.valor_brl)}"
+                f"{r.quantidade:.6f} {r.asset:<6}  =>  {_brl(r.valor_brl)}"
             )
         linhas.append(LINHA)
         linhas.append(f"  Total rendimentos:   {_brl(resultado.total_rendimentos_brl)}")
-        linhas.append("  ℹ Declarar na ficha Rendimentos Tributáveis, código 26.")
+        linhas.append("  (i) Declarar na ficha Rendimentos Tributaveis, codigo 26.")
 
-    # ── Observações ──
+    # -- Observacoes --
     if resultado.observacoes:
         linhas.append("")
-        linhas.append("OBSERVAÇÕES")
+        linhas.append("OBSERVACOES")
         linhas.append(LINHA)
         for obs in resultado.observacoes:
             linhas.append(f"  {obs}")

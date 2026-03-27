@@ -193,9 +193,9 @@ if transacoes:
 
                     st.download_button(
                         label="⬇️ Baixar relatório (.txt)",
-                        data=relatorio_txt.encode("utf-8-sig"),
+                        data=relatorio_txt,
                         file_name=f"darf_{mes:02d}_{ano}.txt",
-                        mime="text/plain; charset=utf-8",
+                        mime="text/plain",
                         use_container_width=True,
                     )
 
@@ -270,9 +270,9 @@ if transacoes:
                 relatorio_txt = formatar_relatorio_irpf(relatorio)
                 st.download_button(
                     label="⬇️ Baixar relatório IRPF (.txt)",
-                    data=relatorio_txt.encode("utf-8-sig"),  # BOM garante UTF-8 no Windows
+                    data=relatorio_txt,
                     file_name=f"irpf_{ano_irpf}.txt",
-                    mime="text/plain; charset=utf-8",
+                    mime="text/plain",
                     use_container_width=True,
                 )
 
