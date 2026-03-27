@@ -88,9 +88,12 @@ class ResultadoMensalRV:
     ganho_liquido: float   # pode ser negativo
     imposto_recolhido: float
     e_isento: bool
+    e_estrangeira_anual: bool = False  # True = apuração anual (exchange estrangeira)
 
     @property
     def periodo(self) -> str:
+        if self.e_estrangeira_anual:
+            return f"Anual {self.ano} (estrangeira)"
         meses = ["Jan","Fev","Mar","Abr","Mai","Jun",
                  "Jul","Ago","Set","Out","Nov","Dez"]
         return f"{meses[self.mes - 1]}/{self.ano}"
@@ -195,8 +198,9 @@ def gerar_irpf(transacoes: list[Transacao], ano: int) -> RelatorioIRPF:
                         if t.data.year == ano and t.exchange_type == "estrangeira"]
     if txs_estrangeiras:
         relatorio.observacoes.append(
-            "Você tem transações em exchanges estrangeiras. "
-            "Declare-as na ficha Bens no Exterior."
+            "Exchanges estrangeiras (sem CNPJ BR): declare os ativos em "
+            "Bens e Direitos > Grupo 08, campo CNPJ em branco. "
+            "Ganhos são apurados anualmente à alíquota de 15% (sem isenção mensal)."
         )
 
     return relatorio
@@ -305,13 +309,19 @@ def _gerar_renda_variavel(
     ano: int,
 ) -> list[ResultadoMensalRV]:
     """
-    Calcula ganhos/perdas mensais de exchanges nacionais para a ficha Renda Variável.
-    Usa um DARFCalculator fresh para ter os prejuízos acumulados corretos.
+    Calcula ganhos/perdas para a ficha Renda Variável.
+
+    - Exchanges nacionais: apuração MENSAL (regra brasileira padrão)
+    - Exchanges estrangeiras: apuração ANUAL, alíquota 15% flat, sem isenção
+      Cada mês com venda é incluído para transparência, mas o imposto é
+      calculado sobre o ganho líquido anual total.
     """
     motor = DARFCalculator()
     motor.processar_transacoes(transacoes)
 
     resultados = []
+
+    # ── Nacionais: mensal ──
     for mes in range(1, 13):
         txs_mes = [t for t in transacoes
                    if t.data.year == ano and t.data.month == mes
@@ -320,7 +330,6 @@ def _gerar_renda_variavel(
             continue
 
         resultado = motor.calcular_mes(transacoes, mes, ano)
-
         if resultado.total_vendas == 0 and not resultado.rendimentos:
             continue
 
@@ -331,6 +340,19 @@ def _gerar_renda_variavel(
             ganho_liquido=resultado.ganho_liquido,
             imposto_recolhido=resultado.imposto_devido,
             e_isento=resultado.e_isento,
+        ))
+
+    # ── Estrangeiras: anual ──
+    resultado_anual = motor.calcular_ano_estrangeira(transacoes, ano)
+    if resultado_anual and resultado_anual.total_vendas > 0:
+        resultados.append(ResultadoMensalRV(
+            mes=12,
+            ano=ano,
+            total_vendas=resultado_anual.total_vendas,
+            ganho_liquido=resultado_anual.ganho_liquido,
+            imposto_recolhido=resultado_anual.imposto_devido,
+            e_isento=False,
+            e_estrangeira_anual=True,
         ))
 
     return resultados
@@ -401,20 +423,21 @@ def formatar_relatorio_irpf(relatorio: RelatorioIRPF) -> str:
         for rv in relatorio.renda_variavel:
             if rv.e_isento:
                 linhas.append(
-                    f"  {rv.periodo:<10}  "
+                    f"  {rv.periodo:<30}  "
                     f"Vendas: {_brl(rv.total_vendas)}  "
-                    f"✓ Isento"
+                    f"[Isento]"
                 )
             elif rv.ganho_liquido > 0:
+                darf_label = "DAA (anual)" if rv.e_estrangeira_anual else "DARF"
                 linhas.append(
-                    f"  {rv.periodo:<10}  "
+                    f"  {rv.periodo:<30}  "
                     f"Ganho: {_brl(rv.ganho_liquido)}  "
-                    f"DARF: {_brl(rv.imposto_recolhido)}"
+                    f"{darf_label}: {_brl(rv.imposto_recolhido)}"
                 )
             else:
                 linhas.append(
-                    f"  {rv.periodo:<10}  "
-                    f"Prejuízo: {_brl(rv.ganho_liquido)}"
+                    f"  {rv.periodo:<30}  "
+                    f"Prejuizo: {_brl(rv.ganho_liquido)}"
                 )
 
         linhas.append(LINHA)
