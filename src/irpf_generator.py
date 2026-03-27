@@ -200,7 +200,7 @@ def gerar_irpf(transacoes: list[Transacao], ano: int) -> RelatorioIRPF:
         relatorio.observacoes.append(
             "Exchanges estrangeiras (sem CNPJ BR): declare os ativos em "
             "Bens e Direitos > Grupo 08, campo CNPJ em branco. "
-            "Ganhos são apurados anualmente à alíquota de 15% (sem isenção mensal)."
+            "Ganhos sao apurados anualmente a aliquota de 15% (sem isencao mensal)."
         )
 
     return relatorio
@@ -250,7 +250,7 @@ def _gerar_bens_e_direitos(
 
         qtd_atual = pos_atu["quantidade"]
         discriminacao = (
-            f"{qtd_atual:.8f} {asset_upper} — "
+            f"{qtd_atual:.8f} {asset_upper} - "
             f"custodiado em {exchange}{cnpj_str}"
         )
 
